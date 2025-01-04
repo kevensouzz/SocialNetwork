@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
-from services.userService import createUser, getAllUsers, getUserById, deleteUserById, updateUserById
+from services.userService import createUser, getAllUsers, getUserById, deleteUserById, updateUserById, loginUser
+from flask_jwt_extended import jwt_required 
 
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
@@ -10,15 +11,18 @@ def register():
   password = data.get('password')
 
   result, statusCode = createUser(username, password)
-
-  if result.get('error'):
-    return jsonify(result), statusCode
   
   return jsonify(result), statusCode
 
-# @user_bp.route('/login', methods=['POST'])
-# def login():
-#   pass
+@user_bp.route('/login', methods=['POST'])
+def login():
+  data = request.json
+  username = data.get('username')
+  password = data.get('password')
+
+  result, statusCode = loginUser(username, password)
+
+  return jsonify(result), statusCode
 
 @user_bp.route('', methods=['GET'])
 def readAll():
@@ -26,6 +30,7 @@ def readAll():
   return jsonify(result), statusCode
 
 @user_bp.route('/<userId>', methods=['GET'])
+@jwt_required
 def readById(userId):
   result, statusCode = getUserById(userId)
 
@@ -35,6 +40,7 @@ def readById(userId):
   return jsonify(result), statusCode
 
 @user_bp.route('/<userId>', methods=['PATCH'])
+@jwt_required
 def update(userId):
   data = request.json
   username = data.get('username')
@@ -48,6 +54,7 @@ def update(userId):
   return jsonify(result), statusCode
 
 @user_bp.route('/<userId>', methods=['DELETE'])
+@jwt_required
 def delete(userId):
   result, statusCode = deleteUserById(userId)
 

@@ -1,6 +1,7 @@
 from database import es
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask import jsonify
+from flask_jwt_extended import create_access_token
 
 def createUser(username, password):
   existing_user = es.search(index="users", body={"query": {"term": {"username.keyword": username}}})
@@ -26,12 +27,27 @@ def createUser(username, password):
 
   response = es.index(index="users", body=userDoc)
   
-  return {
-            "id": response['_id'],
-            "username": username,
-            "password": password
-          }, 201
+  userId = response['_id']
+  access_token = create_access_token(identity=userId)
+
+  return {"JWT": access_token}, 201
+
+def loginUser(username, password):
+  user = es.search(index="users", body={"query": {"term": {"username.keyword": username}}})
   
+  if user['hits']['total']['value'] == 0:
+    return {"error": "invalid credentials"}, 401
+  
+  userData = user['hits']['hits'][0]['_source']
+
+  if not check_password_hash(userData['password'], password):
+    return {"error": "invalid credentials"}, 401
+  
+  userId = user['hits']['hits'][0]['_id']
+  access_token = create_access_token(identity=userId)
+
+  return {"JWT": access_token}, 200
+
 def getAllUsers():
   response = es.search(index="users", body={"query": {"match_all": {}}}, size=100)
 
