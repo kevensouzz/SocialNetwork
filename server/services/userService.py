@@ -1,7 +1,7 @@
 from database import es
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import jsonify
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, get_jwt_identity
 from repositories import userRepository
 
 def createUser(username, password):
@@ -51,6 +51,11 @@ def updateUserById(userId, username=None):
 
   if findById_statusCode == 404:
     return {"error": "User Not Found"}, 404
+  
+  jwt_identity = get_jwt_identity()
+
+  if user['id'] != jwt_identity:
+    return {"error": "Access Denied, UserId and JWT Identity Doesn't Match!"}, 403
 
   script = []
 
@@ -84,6 +89,11 @@ def deleteUserById(userId):
 
   if statusCode == 404:
     return {"error": "User Not Found"}, 404
+
+  jwt_identity = get_jwt_identity()
+
+  if user['id'] != jwt_identity:
+    return {"error": "Access Denied, UserId and JWT Identity Doesn't Match!"}, 403
 
   try:
     response = es.delete(index="users", id=userId)

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from services.userService import createUser, deleteUserById, updateUserById, loginUser
-from flask_jwt_extended import jwt_required 
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from repositories import userRepository
 
 user_bp = Blueprint('user', __name__, url_prefix='/users')
@@ -32,6 +32,11 @@ def readAll():
 @jwt_required()
 def readById(userId):
   result, statusCode = userRepository.findById(userId)
+  jwt_identity = get_jwt_identity()
+
+  if statusCode == 200 and result['id'] != jwt_identity:
+    return {"error": "Access Denied, UserId and JWT Identity Doesn't Match!"}, 403
+
   return jsonify(result), statusCode
 
 @user_bp.route('/<userId>', methods=['PATCH'])
