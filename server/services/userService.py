@@ -2,12 +2,13 @@ from database import es
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import jsonify
 from flask_jwt_extended import create_access_token
+from repositories import userRepository
 
 def createUser(username, password):
-  existing_user = es.search(index="users", body={"query": {"term": {"username.keyword": username}}})
+  existing_user, statusCode = userRepository.findByUsername(username)
     
-  if existing_user['hits']['total']['value'] > 0:
-        return {"error": "Username already taken"}, 409
+  if statusCode != 404:
+    return {"error": "Username already taken"}, 409
 
   if not username or not password:
     return jsonify(), 400
@@ -33,55 +34,30 @@ def createUser(username, password):
   return {"JWT": access_token}, 201
 
 def loginUser(username, password):
-  user = es.search(index="users", body={"query": {"term": {"username.keyword": username}}})
-  
-  if user['hits']['total']['value'] == 0:
-    return {"error": "invalid credentials"}, 401
-  
-  userData = user['hits']['hits'][0]['_source']
-
-  if not check_password_hash(userData['password'], password):
-    return {"error": "invalid credentials"}, 401
-  
-  userId = user['hits']['hits'][0]['_id']
-  access_token = create_access_token(identity=userId)
-
-  return {"JWT": access_token}, 200
-
-def getAllUsers():
-  response = es.search(index="users", body={"query": {"match_all": {}}}, size=100)
-
-  users = [
-    {"id": hit["_id"], "username": hit["_source"]["username"], "password": hit["_source"]["password"]}
-    for hit in response['hits']['hits']
-  ]
-
-  return users, 200
-  
-def getUserById(userId):
-  try:
-    response = es.get(index="users", id=userId)
-
-    return {
-        "id": response["_id"],
-        "username": response["_source"]["username"],
-        "password": response["_source"]["password"]
-    }, 200
-  except Exception:
-    return {"error": "User Not Found"}, 404
-  
-def updateUserById(userId, username=None):
-  user, statusCode = getUserById(userId)
+  user, statusCode = userRepository.findByUsername(username)
 
   if statusCode == 404:
+    return {"error": "User Not Found"}, 404
+
+  if not check_password_hash(user['password'], password):
+    return {"error": "invalid credentials"}, 401
+  
+  access_token = create_access_token(identity=user['id'])
+
+  return {"JWT": access_token}, 200
+  
+def updateUserById(userId, username=None):
+  user, findById_statusCode = userRepository.findById(userId)
+
+  if findById_statusCode == 404:
     return {"error": "User Not Found"}, 404
 
   script = []
 
   if username:
-    existing_user = es.search(index="users", body={"query": {"term": {"username.keyword": username}}})
+    existing_user, findByUsername_statusCode = userRepository.findByUsername(username)
     
-    if existing_user['hits']['total']['value'] > 0 and existing_user['hits']['hits'][0]['_id'] != userId:
+    if findByUsername_statusCode == 200 and existing_user['id'] != userId:
       return {"error": "Username already taken"}, 409
     
     script.append(f"ctx._source.username = '{username}'")
@@ -104,7 +80,7 @@ def updateUserById(userId, username=None):
     return {"error": str(Exception)}, 500
 
 def deleteUserById(userId):
-  user, statusCode = getUserById(userId)
+  user, statusCode = userRepository.findById(userId)
 
   if statusCode == 404:
     return {"error": "User Not Found"}, 404

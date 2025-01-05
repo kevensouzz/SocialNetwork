@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
-from services.userService import createUser, getAllUsers, getUserById, deleteUserById, updateUserById, loginUser
+from services.userService import createUser, deleteUserById, updateUserById, loginUser
 from flask_jwt_extended import jwt_required 
+from repositories import userRepository
 
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
@@ -11,7 +12,6 @@ def register():
   password = data.get('password')
 
   result, statusCode = createUser(username, password)
-  
   return jsonify(result), statusCode
 
 @user_bp.route('/login', methods=['POST'])
@@ -21,26 +21,21 @@ def login():
   password = data.get('password')
 
   result, statusCode = loginUser(username, password)
-
   return jsonify(result), statusCode
 
 @user_bp.route('', methods=['GET'])
 def readAll():
-  result, statusCode = getAllUsers()
+  result, statusCode = userRepository.findAll()
   return jsonify(result), statusCode
 
 @user_bp.route('/<userId>', methods=['GET'])
-@jwt_required
+@jwt_required()
 def readById(userId):
-  result, statusCode = getUserById(userId)
-
-  if result.get('error'):
-    return jsonify(result), statusCode
-
+  result, statusCode = userRepository.findById(userId)
   return jsonify(result), statusCode
 
 @user_bp.route('/<userId>', methods=['PATCH'])
-@jwt_required
+@jwt_required()
 def update(userId):
   data = request.json
   username = data.get('username')
@@ -50,15 +45,10 @@ def update(userId):
       return jsonify(), 400
 
   result, statusCode = updateUserById(userId, username)
-
   return jsonify(result), statusCode
 
 @user_bp.route('/<userId>', methods=['DELETE'])
-@jwt_required
+@jwt_required()
 def delete(userId):
   result, statusCode = deleteUserById(userId)
-
-  if result.get("error"):
-    return jsonify(result), statusCode
-  
   return jsonify(), statusCode
