@@ -1,0 +1,10 @@
+@import url(../assets/css/fonts.css);
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#main {
+  height: calc(100vh - 100px);
+}

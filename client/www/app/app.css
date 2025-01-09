@@ -1,0 +1,6 @@
+@import url(../assets/css/fonts.css);
+
+body {
+  display: flex;
+  flex-direction: column;
+}

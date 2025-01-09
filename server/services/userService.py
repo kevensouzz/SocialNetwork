@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, get_jwt_identity
 from repositories import userRepository
 import re
+from datetime import timedelta
 
 def createUser(username, email, password, confirmPassword):
   if not username or not email or not password or not confirmPassword:
@@ -24,7 +25,7 @@ def createUser(username, email, password, confirmPassword):
         return {"error": "Password must contain at least one special character"}, 400
 
   if len(password) < 8:
-    return {"error": "password must contai at least 8 characters"}, 400
+    return {"error": "password must contain at least 8 characters"}, 400
   
   if password != confirmPassword:
     return {"error": "Passwords do not match"}, 400
@@ -49,7 +50,7 @@ def createUser(username, email, password, confirmPassword):
   response = es.index(index="users", body=userDoc)
   
   userId = response['_id']
-  access_token = create_access_token(identity=userId)
+  access_token = create_access_token(identity=userId, expires_delta=timedelta(hours=1))
 
   return {"JWT": access_token}, 201
 
@@ -59,7 +60,7 @@ def loginUser(username, password):
   if  statusCode == 404 or not check_password_hash(user['password'], password):
     return {"error": "invalid credentials"}, 401
   
-  access_token = create_access_token(identity=user['id'])
+  access_token = create_access_token(identity=user['id'], expires_delta=timedelta(hours=1))
 
   return {"JWT": access_token}, 200
   
@@ -89,9 +90,9 @@ def updateUserById(userId, username=None, email=None):
       return {"error": "Username already taken"}, 409
 
   if email:
-    email_existing_user, findByemail_statusCode = userRepository.findByEmail(email)
+    email_existing_user, findByEmail_statusCode = userRepository.findByEmail(email)
      
-    if findByemail_statusCode == 200 and email_existing_user['id'] != userId:
+    if findByEmail_statusCode == 200 and email_existing_user['id'] != userId:
       return {"error": "Email already taken"}, 409
 
     script.append(f"ctx._source.email = '{email}'")
