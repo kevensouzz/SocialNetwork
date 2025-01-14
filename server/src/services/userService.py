@@ -1,7 +1,7 @@
 from database import es
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, get_jwt_identity
-from repositories import userRepository
+from src.repositories import userRepository
 import re
 from datetime import timedelta
 
@@ -33,10 +33,10 @@ def createUser(username, email, password, confirmPassword):
   existing_userByUsername, username_statusCode = userRepository.findByUsername(username)
   existing_userByEmail, email_statusCode = userRepository.findByEmail(email)
     
-  if username_statusCode != 404:
+  if username_statusCode == 200:
     return {"error": "Username already taken"}, 409
 
-  if email_statusCode != 404:
+  if email_statusCode == 200:
     return {"error": "Email already taken"}, 409
 
   HashedPassword = generate_password_hash(password)
@@ -88,6 +88,8 @@ def updateUserById(userId, username=None, email=None):
     
     if findByUsername_statusCode == 200 and username_existing_user['id'] != userId:
       return {"error": "Username already taken"}, 409
+    
+    script.append(f"ctx._source.username = '{username}'")
 
   if email:
     email_existing_user, findByEmail_statusCode = userRepository.findByEmail(email)

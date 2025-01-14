@@ -1,5 +1,5 @@
 from flask import Flask
-from controllers.userController import user_bp
+from src.controllers.userController import user_bp
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv, dotenv_values
 
@@ -14,4 +14,4 @@ jwt = JWTManager(app)
 app.register_blueprint(user_bp)
 
 if __name__ == "__main__":
-  app.run(debug=True)
+  app.run(host="0.0.0.0", port=5000)

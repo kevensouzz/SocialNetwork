@@ -1,0 +1,34 @@
+services:
+  server:
+    build:
+      context: ./server
+    container_name: server
+    ports:
+      - "5000:5000"
+    depends_on:
+      - database
+    networks:
+      - talkchain
+
+  database:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    container_name: database
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - talkchain
+
+volumes:
+  esdata:
+    driver: local
+
+networks:
+  talkchain:
+    name: talkchain
+    driver: bridge

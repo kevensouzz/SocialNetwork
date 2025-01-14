@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
-from services.userService import createUser, deleteUserById, updateUserById, loginUser
+from src.services.userService import createUser, deleteUserById, updateUserById, loginUser
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from repositories import userRepository
+from src.repositories import userRepository
 
 user_bp = Blueprint('user', __name__, url_prefix='/users')
 
