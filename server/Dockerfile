@@ -1,6 +1,11 @@
-FROM python:3.12
-WORKDIR /server
+FROM python:3.12.8
+
+WORKDIR /flask
+
 COPY requirements.txt .
+
 RUN pip install -r requirements.txt
+
 COPY . .
+
 CMD ["flask", "run", "--host=0.0.0.0"]

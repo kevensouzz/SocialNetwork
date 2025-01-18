@@ -1,18 +1,25 @@
 services:
-  server:
+  php:
+    build:
+      context: ./client
+    container_name: php
+    ports:
+      - "80:80"
+
+  flask:
     build:
       context: ./server
-    container_name: server
+    container_name: flask
     ports:
       - "5000:5000"
     depends_on:
-      - database
+      - elasticsearch
     networks:
       - talkchain
 
-  database:
+  elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
-    container_name: database
+    container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
