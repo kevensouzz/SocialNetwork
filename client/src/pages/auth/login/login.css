@@ -11,7 +11,7 @@ body {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  margin: auto;
+  margin: 150px auto;
 }
 
 img {
@@ -108,11 +108,6 @@ form {
 }
 
 @media screen and (max-width: 1440px) {
-  #main {
-    justify-content: space-between;
-    padding: 0 2rem;
-  }
-
   img {
     width: 400px;
   }
@@ -154,14 +149,15 @@ form {
       }
     }
 
+    .links a {
+      cursor: default;
+    }
   }
 }
 
 @media screen and (max-width: 425px) {
   form {
-    width: 100%;
     padding: 0.25rem;
-    background-color: transparent;
     height: 375px;
 
     .text {
@@ -203,5 +199,14 @@ form {
       }
     }
   }
+}
 
+@media screen and (max-width: 320px) {
+  form .text h1 {
+    font-size: 24px;
+  }
+
+  form .text h2 {
+    font-size: 20px;
+  }
 }

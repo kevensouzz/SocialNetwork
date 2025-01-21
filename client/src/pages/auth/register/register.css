@@ -11,7 +11,7 @@ body {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  margin: auto;
+  margin: 150px auto;
 }
 
 img {
@@ -101,5 +101,121 @@ form {
     cursor: pointer;
     color: rgb(0, 0, 255);
     font-weight: 300;
+  }
+}
+
+@media screen and (max-width: 1440px) {
+  img {
+    width: 400px;
+  }
+
+  form {
+    width: 500px;
+    height: 550px;
+    padding: 0.75rem;
+
+    .fields {
+      padding: 0 1.5rem;
+    }
+  }
+}
+
+@media screen and (max-width: 1024px) {
+  #main {
+    justify-content: center;
+    padding: 0;
+  }
+
+  img {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  form {
+    width: 100%;
+    padding: 0.4rem;
+    background-color: transparent;
+    height: 500px;
+
+    .fields {
+      padding: 0 1rem;
+
+      .field {
+        input {
+          background-color: rgb(5, 5, 5);
+
+          &::placeholder {
+            font-size: 10px;
+          }
+        }
+      }
+
+      button {
+        cursor: default;
+      }
+    }
+
+    a {
+      cursor: default;
+    }
+  }
+}
+
+@media screen and (max-width: 425px) {
+  form {
+    padding: 0.25rem;
+    height: 425px;
+
+    .text {
+
+      h1,
+      h2 {
+        line-height: 1.125;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      h2 {
+        font-size: 24px;
+      }
+    }
+
+    .fields {
+      padding: 0.25rem;
+
+      .field {
+        input {
+          font-size: 14px;
+
+          &::placeholder {
+            font-size: 8px;
+          }
+        }
+
+        label {
+          font-size: 14px;
+        }
+      }
+
+      button {
+        margin-top: 0.25rem;
+        height: 40px;
+        font-size: 22px;
+      }
+
+    }
+  }
+}
+
+@media screen and (max-width: 320px) {
+  form .text h1 {
+    font-size: 24px;
+  }
+
+  form .text h2 {
+    font-size: 20px;
   }
 }
