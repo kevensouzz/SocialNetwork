@@ -30,6 +30,7 @@ form {
   justify-content: space-between;
 
   .text {
+
     h1,
     h2 {
       color: rgb(240, 240, 240);
@@ -104,4 +105,103 @@ form {
       font-weight: 300;
     }
   }
+}
+
+@media screen and (max-width: 1440px) {
+  #main {
+    justify-content: space-between;
+    padding: 0 2rem;
+  }
+
+  img {
+    width: 400px;
+  }
+
+  form {
+    width: 500px;
+    height: 550px;
+    padding: 0.75rem;
+  }
+}
+
+@media screen and (max-width: 1024px) {
+  #main {
+    justify-content: center;
+    padding: 0;
+  }
+
+  img {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  form {
+    width: 100%;
+    padding: 0.4rem;
+    background-color: transparent;
+    height: 475px;
+
+    .fields {
+      .field {
+        input {
+          background-color: rgb(5, 5, 5);
+        }
+      }
+
+      button {
+        cursor: default;
+      }
+    }
+
+  }
+}
+
+@media screen and (max-width: 425px) {
+  form {
+    width: 100%;
+    padding: 0.25rem;
+    background-color: transparent;
+    height: 375px;
+
+    .text {
+
+      h1,
+      h2 {
+        line-height: 1.125;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      h2 {
+        font-size: 24px;
+      }
+    }
+
+    .fields {
+      padding: 0.35rem;
+
+      .field {
+        label {
+          font-size: 14px;
+        }
+      }
+
+      button {
+        margin-top: 0.25rem;
+        height: 40px;
+        font-size: 22px;
+      }
+
+    }
+
+    .links {
+      a {
+        font-size: 12px;
+      }
+    }
+  }
+
 }

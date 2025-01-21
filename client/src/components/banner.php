@@ -1,0 +1,1 @@
+<a class="banner" href="/home"><span>T</span>alk<span>C</span>hain</a>
