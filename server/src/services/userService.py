@@ -57,13 +57,13 @@ def createUser(username, email, password, confirmPassword):
 def loginUser(username, password):
   user, statusCode = userRepository.findByUsername(username)
 
-  if  statusCode == 404 or not check_password_hash(user['password'], password):
+  if statusCode == 404 or not check_password_hash(user['password'], password):
     return {"error": "invalid credentials"}, 401
   
   access_token = create_access_token(identity=user['id'], expires_delta=timedelta(hours=1))
 
   return {"JWT": access_token}, 200
-  
+
 def updateUserById(userId, username=None, email=None):
   user, findById_statusCode = userRepository.findById(userId)
 
@@ -116,6 +116,46 @@ def updateUserById(userId, username=None, email=None):
         }, 200
   except Exception:
     return {"error": str(Exception)}, 500
+  
+
+def updateUserPasswordById(userId, password, confirmPassword):
+  if not password or not confirmPassword:
+    return {"error": "Mandatory fields aren't filled in"}, 400
+  
+  user, findById_statusCode = userRepository.findById(userId)
+
+  if findById_statusCode == 404:
+    return {"error": "User Not Found"}, 404
+  
+  # jwt_identity = get_jwt_identity()
+
+  # if user['id'] != jwt_identity:
+    # return {"error": "Access Denied, UserId and JWT Identity Doesn't Match!"}, 403
+
+  if not re.search("[a-z]", password):
+        return {"error": "Password must contain at least one lowercase letter"}, 400
+  if not re.search("[A-Z]", password):
+        return {"error": "Password must contain at least one uppercase letter"}, 400
+  if not re.search("[0-9]", password):
+        return {"error": "Password must contain at least one digit"}, 400
+  if not re.search("[!@#$%^&*(),.?\":{}|<>]", password):
+        return {"error": "Password must contain at least one special character"}, 400
+
+  if len(password) < 8:
+    return {"error": "password must contain at least 8 characters"}, 400
+  
+  if password != confirmPassword:
+    return {"error": "Passwords do not match"}, 400
+  
+  HashedPassword = generate_password_hash(password)
+
+  script = f"ctx._source.password = '{HashedPassword}'"
+
+  try:
+     response = es.update(index="users", id=userId, body={"script": script})
+     return None, 204
+  except Exception:
+     return {"error": str(Exception)}, 500
 
 def deleteUserById(userId):
   user, statusCode = userRepository.findById(userId)
@@ -130,6 +170,6 @@ def deleteUserById(userId):
 
   try:
     response = es.delete(index="users", id=userId)
-    return response, 204
+    return None, 204
   except Exception:
     return {"error": str(Exception)}, 500

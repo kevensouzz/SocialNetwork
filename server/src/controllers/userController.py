@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from src.services.userService import createUser, deleteUserById, updateUserById, loginUser
+from src.services.userService import createUser, deleteUserById, updateUserById, updateUserPasswordById, loginUser
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from src.repositories import userRepository
 
@@ -46,16 +46,27 @@ def readById(userId):
 def update(userId):
   data = request.json
   username = data.get('username')
+  email = data.get('email')
 
   if username:
     if len(username) > 16 or len(username) < 3:
       return jsonify(), 400
 
-  result, statusCode = updateUserById(userId, username)
+  result, statusCode = updateUserById(userId, username, email)
+  return jsonify(result), statusCode
+
+@user_bp.route('/password/<userId>', methods=['PATCH'])
+# @jwt_required()
+def updatePassword(userId):
+  data = request.json
+  password = data.get('password')
+  confirmPassword = data.get('confirmPassword')
+
+  result, statusCode = updateUserPasswordById(userId, password, confirmPassword)
   return jsonify(result), statusCode
 
 @user_bp.route('/<userId>', methods=['DELETE'])
 # @jwt_required()
 def delete(userId):
   result, statusCode = deleteUserById(userId)
-  return jsonify(), statusCode
+  return jsonify(result), statusCode
