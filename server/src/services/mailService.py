@@ -1,7 +1,9 @@
 from flask_mailman import EmailMessage
-import secrets, time, hashlib, hmac
 from database import es
-import datetime
+from src.repositories import codemailRepository
+from datetime import datetime, timedelta
+import secrets, time, hashlib, hmac
+from src.repositories import userRepository
 
 def generateCode(email):
   currentTime = int (time.time())
@@ -23,11 +25,18 @@ def saveCodemail(email, code, action):
   }
   
   try:
-      response = es.index(index="codemail", body=document)
+      response = es.index(index="codemails", id=code, body=document)
       return response
   except Exception as e:
       print(f"Error indexing document: {str(e)}")
       return None
+  
+def useCodemail(code):
+  try:
+    es.update(index="codemails", id=code, body={"script": "ctx._source.used = true"})
+    return {"message": "Codemail marked as used successfully"}, 200
+  except Exception as e:
+    return {"error": str(e)}, 500
 
 def generateResetBody(code):
   return f"""
@@ -119,6 +128,12 @@ def sendCodemail(email, action):
   if not email or not action:
     return {"error": "Mandatory fields aren't filled in"}, 400
   
+  if action == 'reset':
+    userByEmail, userByEmail_statusCode = userRepository.findByEmail(email)
+
+    if userByEmail_statusCode != 200:
+      return {"error": "This email is not registered here"}, 403
+
   code = generateCode(email)
   
   if action == 'reset':
@@ -146,4 +161,46 @@ def sendCodemail(email, action):
   except Exception as e:
      return {'error': str(e)}, 500
   
-# def verifyCodemail():
+def verifyCodemail(email, code, action):
+  if not email or not code or not action:
+    return {"error": "Mandatory fields aren't filled in"}, 400
+
+  # verificar se o código está no banco de dados
+  existingCode, existingCode_statusCode = codemailRepository.findByCode(code)
+
+  if existingCode_statusCode != 200:
+    return {"Error": "Codemail not found"}, 404
+  
+  # verificar se o usuário que está submetendo é o dono do código pelo email
+  if existingCode['email'] != email:
+    return {"Error": "You aren't the code's owner"}, 401
+  
+  if existingCode['used'] == True:
+    return {"Error": "This code is no longer valid"}, 410
+
+  # verificar se a ação do código corresponde
+  if existingCode['action'] != action:
+    return {"Error": "This code wasn't generated for this purpose"}, 401
+
+  # verificar se este mesmo usuário não solicitou outro código com a mesma ação posteriormente
+  latestCode, latestCode_statusCode = codemailRepository.findLatestCodeByEmailAndAction(email, action)
+
+  if latestCode_statusCode == 200:
+      if latestCode and latestCode['code'] != code:
+          return {"Error": "A new code has been generated for this action. Please use the latest code."}, 403
+  else:
+      print(f"Error finding latest code: {latestCode_statusCode}")
+  
+  # verificar se o código foi gerado a menos de 5 minutos
+  codeTimestamp = existingCode['timestamp']
+  currentTime = datetime.now()
+
+  if isinstance(codeTimestamp, str):
+    codeTimestamp = datetime.strptime(codeTimestamp, '%Y-%m-%dT%H:%M:%S.%f')
+
+  if currentTime - codeTimestamp > timedelta(minutes=5):
+    return {"Error": "The code has expired"}, 410
+
+  useCodemail(code)
+
+  return {"message": "Codemail verified successfully"}, 200
